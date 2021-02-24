@@ -18,7 +18,7 @@ double f1(double x){
 }
 
 double f2(double x){
-    return sin(2.0*3.141592*x) + cos(5.0*3.141592*x);
+    return sin(2*x) + cos(5*x);
 }
 
 void calc_trap_per_thread(int *threads, int n_threads, int traps){
@@ -57,13 +57,16 @@ void* calcThreads(void* args){
         arg->area = (f2(arg->a) + f2(arg->b))/2;
     
         for(i = 1; i < arg->traps; i++){
-            x = arg->a + i*h;
+            x = (arg->a + i*h);
             arg->area += f2(x);
+            
         }
+
+        h /= 180*3.141592;
 
     }
 
-    arg->area = h*arg->area;
+    arg->area *= h;
 
     pthread_exit(NULL);
 
@@ -82,7 +85,7 @@ int main(){
 
     scanf("%d",&func);
 
-    printf("Digite o intervalo(a,b) para calcular a integral\n");
+    printf("Digite o intervalo(a,b) para calcular a integral, para a segunda função o intervalo deve ser em graus\n");
 
     scanf("%le %le", &a, &b);
 
@@ -98,11 +101,18 @@ int main(){
         printf("Thread [%d]: Vai calcular %d trapézio(s)\n", i, trap_per_thread[i]);
     }
 
-    for(i = 0; i < n_threads; i++){
+    params[0].area = 0;
+    params[0].traps = trap_per_thread[0];
+    params[0].a = 0;
+    params[0].b = ((b-a)/trap)*params[0].traps;
+    params[0].func = func;
+    pthread_create(&threads[0], NULL, calcThreads, (void*)(params));
+
+    for(i = 1; i < n_threads; i++){
         params[i].area = 0;
         params[i].traps = trap_per_thread[i];
-        params[i].a = i*((b-a)/trap)*params[i].traps;
-        params[i].b = (i+1)*((b-a)/trap)*params[i].traps;
+        params[i].a = params[i-1].b;
+        params[i].b = params[i].a + ((b-a)/trap)*params[i].traps;
         params[i].func = func;
         pthread_create(&threads[i], NULL, calcThreads, (void*)(params+i));
     }

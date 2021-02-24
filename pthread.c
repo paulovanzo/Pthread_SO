@@ -10,6 +10,7 @@ typedef struct{
     double area;
     int traps;
     int func;
+    int index;
 } thread_arg;
 
 double f1(double x){
@@ -37,15 +38,15 @@ void calc_trap_per_thread(int *threads, int n_threads, int traps){
     }
 }
 
-void calcThreads(void* args){
+void* calcThreads(void* args){
     thread_arg *arg = args;
-    int i;
+    int i = 0;
     double x;
     double h = ((arg->b)-(arg->a))/arg->traps;
     if(arg->func == 0){
         arg->area = (f1(arg->a) + f1(arg->b))/2;
     
-        for(i = 0; i < arg->traps; i++){
+        for(i = 1; i < arg->traps; i++){
             x = arg->a + i*h;
             arg->area += f1(x);
         }
@@ -54,22 +55,23 @@ void calcThreads(void* args){
 
         arg->area = (f2(arg->a) + f2(arg->b))/2;
     
-        for(i = 0; i < arg->traps; i++){
+        for(i = 1; i < arg->traps; i++){
             x = arg->a + i*h;
             arg->area += f2(x);
         }
 
     }
 
-    arg->area += h*arg->area;
+    arg->area = h*arg->area;
 
     pthread_exit(NULL);
 
 }
 
 int main(){
-    int trap, n_threads, func, i;
+    int trap, n_threads, func, i, retorno;
     double a, b, area = 0;
+    void* thread_return;
 
     printf("Dê os numeros de Trapézios e de Threads, respectivamente:\n");
 
@@ -97,14 +99,15 @@ int main(){
 
     for(i = 0; i < n_threads; i++){
         params[i].area = 0;
-        params[i].a = a;
-        params[i].b = b;
-        params[i].traps = n_threads;
+        params[i].traps = trap_per_thread[i];
+        params[i].a = i*((b-a)/trap)*params[i].traps;
+        params[i].b = (i+1)*((b-a)/trap)*params[i].traps;
         params[i].func = func;
-        pthread_create(&threads[i], NULL, calcThreads, (void*)&params);
+        pthread_create(&threads[i], NULL, calcThreads, (void*)(params+i));
     }
 
     for(i = 0;i < n_threads; i++){
+        retorno = pthread_join(threads[i],&thread_return);
         area = params[i].area + area;
     }
 

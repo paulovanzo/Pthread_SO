@@ -18,7 +18,7 @@ double f1(double x){
 }
 
 double f2(double x){
-    return sin(2.0*x) + cos(5.0*x);
+    return sin(2.0*3.141592*x) + cos(5.0*3.141592*x);
 }
 
 void calc_trap_per_thread(int *threads, int n_threads, int traps){
@@ -44,6 +44,7 @@ void* calcThreads(void* args){
     double x;
     double h = ((arg->b)-(arg->a))/arg->traps;
     if(arg->func == 0){
+
         arg->area = (f1(arg->a) + f1(arg->b))/2;
     
         for(i = 1; i < arg->traps; i++){
@@ -94,7 +95,7 @@ int main(){
     calc_trap_per_thread(trap_per_thread, n_threads, trap);
 
     for(i = 0; i < n_threads; i++){
-        printf("Thread [%d]: %d\n", i, trap_per_thread[i]);
+        printf("Thread [%d]: Vai calcular %d trapézio(s)\n", i, trap_per_thread[i]);
     }
 
     for(i = 0; i < n_threads; i++){
@@ -111,7 +112,7 @@ int main(){
         area = params[i].area + area;
     }
 
-    printf("Area: %.2f\n",area);
+    printf("Area: %.2le\n",area);
 
     return 0;
 }
